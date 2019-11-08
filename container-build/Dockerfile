@@ -1,18 +1,21 @@
-# Use the httpd-parent image as base
+# Use the redhattraining/httpd-parent image as base
 FROM quay.io/redhattraining/httpd-parent
 
+# Change the port to 8080
 EXPOSE 8080
 
-LABEL io.openshift.expose-service="8080:http"
-
+# Labels consumed by OpenShift
 LABEL io.k8s.description="A basic Apache HTTP Server child image, uses ONBUILD" \
- io.k8s.display-name="Apache HTTP SERVER" \
- IO.OPENSHIFT.EXPOSE-SERVIES="8080HTTP" \
- IO.OPENSHIFT.TAGS="APACHE, HTTPD"
+      io.k8s.display-name="Apache HTTP Server" \
+      io.openshift.expose-services="8080:http" \
+      io.openshift.tags="apache, httpd"
 
-run SED -I "S/lISTEN 80/lISTEN 8080/G" /ETC/HTTPD/CONF/HTTPD.CONF
+# Change web server port to 8080
+RUN sed -i "s/Listen 80/Listen 8080/g" /etc/httpd/conf/httpd.conf
 
-run CHGRP -r 0 /VAR/LOG/HTTPD /VAR/RUN/HTTPD && \
- CHMOD -r G=U /VAR/LOG/HTTPD /VAR/RUN/HTTPD
+# Permissions to allow container to run on OpenShift
+RUN chgrp -R 0 /var/log/httpd /var/run/httpd && \
+    chmod -R g=u /var/log/httpd /var/run/httpd
 
+# Run as a non-privileged user
 USER 1001
